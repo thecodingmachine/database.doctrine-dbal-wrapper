@@ -1,0 +1,6 @@
+*~
+vendor/*
+.htaccess
+.*~
+config.php
+test/config.php

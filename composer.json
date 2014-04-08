@@ -1,0 +1,45 @@
+{
+	"name" : "mouf/database.doctrine-dbal-wrapper",
+	"description" : "This package contains wrapper classes that make Doctrine DBAL easy to use in Mouf",
+	"type" : "mouf-library",
+	"authors" : [{
+			"name" : "Kévin Nguyen",
+			"email" : "k.nguyen@thecodingmachine.com",
+			"homepage" : "http://mouf-php.com"
+		}
+	],
+	"keywords" : [
+		"mouf",
+		"database",
+		"dbconnection"
+	],
+	"homepage" : "https://github.com/thecodingmachine/database.doctrine-dbal-wrapper",
+	"license" : [
+		"MIT"
+	],
+	"require" : {
+		"php" : ">=5.3.0",
+		"psr/log" : "~1.0"
+	},
+	"require-dev" : {
+		"phpunit/phpunit" : "3.7.*"
+	},
+	"autoload" : {
+		"psr-4" : {
+			"Mouf\\Doctrine\\DBAL\\" : "src/"
+		}
+	},
+	"extra" : {
+		"mouf" : {
+			"install" : [{
+					"type" : "url",
+					"url" : "dbalconnectioninstall/"
+				}
+			],
+			"logo" : "icons/database.png",
+			"require-admin" : [
+				"src/DBALConnectionAdmin.php"
+			]
+		}
+	}
+}
