@@ -1,6 +1,8 @@
 <?php
 namespace Mouf\Doctrine\DBAL\Controllers;
 
+use Doctrine\DBAL\Connection;
+
 use Mouf\Actions\InstallUtils;
 use Mouf\MoufManager;
 use Mouf\Mvc\Splash\Controllers\Controller;
@@ -38,6 +40,28 @@ class DBALConnectionInstallController extends Controller  {
 	 * @var HtmlBlock
 	 */
 	public $contentBlock;
+	
+	/**
+	 * List of supported drivers and their mappings to the driver classes.
+	 *
+	 * To add your own driver use the 'driverClass' parameter to
+	 * {@link DriverManager::getConnection()}.
+	 *
+	 * @var array
+	 */
+	protected $driverMap = array(
+		'pdo_mysql'          => 'Doctrine\DBAL\Driver\PDOMySql\Driver',
+		'pdo_sqlite'         => 'Doctrine\DBAL\Driver\PDOSqlite\Driver',
+		'pdo_pgsql'          => 'Doctrine\DBAL\Driver\PDOPgSql\Driver',
+		'pdo_oci'            => 'Doctrine\DBAL\Driver\PDOOracle\Driver',
+		'oci8'               => 'Doctrine\DBAL\Driver\OCI8\Driver',
+		'ibm_db2'            => 'Doctrine\DBAL\Driver\IBMDB2\DB2Driver',
+		'pdo_sqlsrv'         => 'Doctrine\DBAL\Driver\PDOSqlsrv\Driver',
+		'mysqli'             => 'Doctrine\DBAL\Driver\Mysqli\Driver',
+		'drizzle_pdo_mysql'  => 'Doctrine\DBAL\Driver\DrizzlePDOMySql\Driver',
+		'sqlanywhere'        => 'Doctrine\DBAL\Driver\SQLAnywhere\Driver',
+		'sqlsrv'             => 'Doctrine\DBAL\Driver\SQLSrv\Driver',
+	);
 	
 	/**
 	 * Displays the first install screen.
@@ -111,7 +135,7 @@ class DBALConnectionInstallController extends Controller  {
 	 * @Logged
 	 * @param string $selfedit If true, the name of the component must be a component from the Mouf framework itself (internal use only)
 	 */
-	public function install($host, $port, $dbname, $user, $password, $selfedit = "false") {
+	public function install($host, $port, $dbname, $user, $password, $driver, $selfedit = "false") {
 		if ($selfedit == "true") {
 			$this->moufManager = MoufManager::getMoufManager();
 		} else {
@@ -143,14 +167,13 @@ class DBALConnectionInstallController extends Controller  {
 			$configManager->registerConstant("DB_PASSWORD", "string", "", "The password to access the database.");
 		}
 		
-		if (!$moufManager->instanceExists("dbConnection")) {
-			$moufManager->declareComponent("dbConnection", "Mouf\\Database\\DBConnection\\MySqlConnection");
-			$moufManager->setParameter("dbConnection", "host", "DB_HOST", "config");
-			$moufManager->setParameter("dbConnection", "port", "DB_PORT", "config");
-			$moufManager->setParameter("dbConnection", "user", "DB_USERNAME", "config");
-			$moufManager->setParameter("dbConnection", "password", "DB_PASSWORD", "config");
-			$moufManager->setParameter("dbConnection", "dbname", "DB_NAME", "config");
-		}
+		$connectionInstance = $moufManager->createInstance("Doctrine\\DBAL\\Connection");
+		$connectionInstance->getProperty("params")->setOrigin("php")->setValue('return array("host" => DB_HOST,"user" => DB_USERNAME,"password" => DB_PASSWORD,"port" => DB_PORT,"dbname" => DB_NAME);');
+		
+		$driverInstance = $moufManager->createInstance($driver);
+		
+		$connectionInstance->getProperty("driver")->setValue($driverInstance);
+		$connectionInstance->setName("dbalConnection");
 		
 		$configPhpConstants = $configManager->getDefinedConstants();
 		$configPhpConstants['DB_HOST'] = $host;
@@ -175,16 +198,17 @@ class DBALConnectionInstallController extends Controller  {
 	 * @param string $user
 	 * @param string $password
 	 */
-	public function getDbList($host, $port, $user, $password) {
-		
-		$conn = new MySqlConnection();
-		$conn->host = $host;
-		$conn->port = (!empty($port))?$port:null;
-		$conn->user = $user;
-		$conn->password = (!empty($password))?$password:null;
+	public function getDbList($host, $port, $user, $password, $driver) {
+		$driverClass = new $driver();
+		$params = array(
+			"host" => $host,
+			"user" => $user,
+			"password" => $password
+		);
+		$conn = new Connection($params, $driverClass);
 		
 		try {
-			$dbList = $conn->getDatabaseList();
+			$dbList = $conn->getSchemaManager()->listDatabases();
 		} catch (Exception $e) {
 			// If bad parameters are passed, let's just return an empty list.
 			echo "[]";

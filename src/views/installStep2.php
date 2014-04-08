@@ -1,7 +1,7 @@
 <?php /* @var $this DbConnectionInstallController */ ?>
 <script type="text/javascript" charset="utf-8">
 function getDbList() {
-    jQuery.getJSON("getDbList",{host: jQuery("#host").val(), port: jQuery("#port").val(), user: jQuery("#user").val(), password: jQuery("#password").val()}, function(j){
+    jQuery.getJSON("getDbList",{driver: jQuery("#driver").val(), host: jQuery("#host").val(), port: jQuery("#port").val(), user: jQuery("#user").val(), password: jQuery("#password").val()}, function(j){
       var currentDb = '<?php echo  plainstring_to_htmlprotected($this->dbname) ?>';
       var options = '<option value=""></option>';
       for (var i = 0; i < j.length; i++) {
@@ -19,7 +19,6 @@ function getDbList() {
 
 jQuery(function(){
   jQuery(".recomputeDbList").change(getDbList)
-  getDbList();
 })
 
 
@@ -32,7 +31,21 @@ jQuery(function(){
 
 <input type="hidden" id="selfedit" name="selfedit" value="<?php echo plainstring_to_htmlprotected($this->selfedit) ?>" />
 
-
+<div class="control-group">
+	<label class="control-label" for="driver">Choose a driver</label>
+	<div class="controls">
+		<select name="driver" id="driver" class="recomputeDbList">
+		<option value=''> - Choose a Driver - </option>
+		<?php 
+		foreach ($this->driverMap as $key => $value) {
+		?>
+		<option value='<?php echo $value?>'><?php echo $key; ?></option>
+		<?php	
+		}
+		?>
+	</select>
+	</div>
+</div>
 <div class="control-group">
 	<label for="host" class="control-label">Host:</label>
 	<div class="controls">

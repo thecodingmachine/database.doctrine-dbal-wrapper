@@ -1,3 +1,8 @@
+<?php 
+use Mouf\Doctrine\DBAL\Controllers\DBALConnectionInstallController;
+/* @var $this DBALConnectionInstallController */
+?>
+
 <h1>Setting up your database connection</h1>
 
 <p>You will need a database connection. This installation wizard will create a "dbConnection" instance for a MySQL connection, and will add 5 config parameters:</p>
@@ -9,8 +14,10 @@
 	<li><b>DB_PASSWORD</b>: The password to access the database.</li>
 </ul>
 
-<form action="configure">
-	<button class="btn btn-danger">Configure database connection</button>
+<form action="configure" class="form-horizontal">
+	<div class="control-group">
+      <button type="submit" class="btn btn-danger">Configure database connection</button>
+    </div>
 </form>
 <form action="skip">
 	<button class="btn">Skip</button>
