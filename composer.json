@@ -26,7 +26,7 @@
 	},
 	"autoload" : {
 		"psr-4" : {
-			"Mouf\\Doctrine\\DBAL\\" : "src/"
+			"Mouf\\Doctrine\\DBAL\\" : "src/Mouf/Doctrine/DBAL/"
 		}
 	},
 	"extra" : {

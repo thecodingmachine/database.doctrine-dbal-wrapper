@@ -1,6 +1,5 @@
 <?php
 use Mouf\MoufManager;
-
 // Controller declaration
 MoufManager::getMoufManager()->declareComponent('dbalconnectionedit', 'Mouf\\Doctrine\\DBAL\\Controllers\\DBALConnectionEditController', true);
 MoufManager::getMoufManager()->bindComponents('dbalconnectionedit', 'template', 'moufTemplate');
