@@ -14,6 +14,7 @@ use Mouf\Mvc\Splash\Controllers\Controller;
  * @Component
  */
 class DBALConnectionInstallController extends Controller  {
+	
 	public $selfedit;
 	
 	/**
@@ -107,7 +108,7 @@ class DBALConnectionInstallController extends Controller  {
 	 * @Logged
 	 * @param string $selfedit If true, the name of the component must be a component from the Mouf framework itself (internal use only) 
 	 */
-	public function configure($selfedit = "false") {
+	public function configure($selfedit = "false", $instanceName = null) {
 		$this->selfedit = $selfedit;
 		
 		if ($selfedit == "true") {
@@ -116,12 +117,15 @@ class DBALConnectionInstallController extends Controller  {
 			$this->moufManager = MoufManager::getMoufManagerHiddenInstance();
 		}
 		
-		$this->host = "localhost";
-		$this->port = "";
-		$this->dbname = "";
-		$this->user = "root";
-		$this->password = "";
-				
+		$configManager = $this->moufManager->getConfigManager();
+		$constants = $configManager->getMergedConstants();
+
+		$this->host = isset($constants['DB_HOST']) ? $constants['DB_HOST']['value'] : "localhost";
+		$this->port = isset($constants['DB_PORT']) ? $constants['DB_PORT']['value'] : "";
+		$this->dbname = isset($constants['DB_NAME']) ? $constants['DB_NAME']['value'] : "";
+		$this->user = isset($constants['DB_USERNAME']) ? $constants['DB_USERNAME']['value'] : "root";
+		$this->password = isset($constants['DB_PASSWORD']) ? $constants['DB_PASSWORD']['value'] : "";
+		
 		$this->contentBlock->addFile(dirname(__FILE__)."/../../../../views/installStep2.php", $this);
 		$this->template->toHtml();
 	}
@@ -167,13 +171,18 @@ class DBALConnectionInstallController extends Controller  {
 			$configManager->registerConstant("DB_PASSWORD", "string", "", "The password to access the database.");
 		}
 		
-		$connectionInstance = $moufManager->createInstance("Doctrine\\DBAL\\Connection");
-		$connectionInstance->getProperty("params")->setOrigin("php")->setValue('return array("host" => DB_HOST,"user" => DB_USERNAME,"password" => DB_PASSWORD,"port" => DB_PORT,"dbname" => DB_NAME);');
+		if (!$moufManager->instanceExists("dbalConnection")){
+			$driverInstance = $moufManager->createInstance($driver);
+			$eventManager = $moufManager->createInstance('Doctrine\\Common\\EventManager');
+			
+			$connectionInstance = $moufManager->createInstance("Doctrine\\DBAL\\Connection");
+			$connectionInstance->getProperty("params")->setOrigin("php")->setValue('return array("host" => DB_HOST,"user" => DB_USERNAME,"password" => DB_PASSWORD,"port" => DB_PORT,"dbname" => DB_NAME);');
+			$connectionInstance->getProperty("driver")->setValue($driverInstance);
+			$connectionInstance->getProperty("eventManager")->setValue($eventManager);
+			$connectionInstance->setName("dbalConnection");
+		}
 		
-		$driverInstance = $moufManager->createInstance($driver);
 		
-		$connectionInstance->getProperty("driver")->setValue($driverInstance);
-		$connectionInstance->setName("dbalConnection");
 		
 		$configPhpConstants = $configManager->getDefinedConstants();
 		$configPhpConstants['DB_HOST'] = $host;

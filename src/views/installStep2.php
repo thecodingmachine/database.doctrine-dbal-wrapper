@@ -44,6 +44,7 @@ jQuery(function(){
 		}
 		?>
 	</select>
+	<p class="info">Note: for now, only PDO Mysql and MSQLi have been tested.</p>
 	</div>
 </div>
 <div class="control-group">
