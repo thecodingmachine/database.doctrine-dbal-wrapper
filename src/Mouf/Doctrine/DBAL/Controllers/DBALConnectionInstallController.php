@@ -148,7 +148,6 @@ class DBALConnectionInstallController extends Controller  {
 		
 		$moufManager = $this->moufManager;
 		$configManager = $moufManager->getConfigManager();
-		
 		$constants = $configManager->getMergedConstants();
 		
 		if (!isset($constants['DB_HOST'])) {
