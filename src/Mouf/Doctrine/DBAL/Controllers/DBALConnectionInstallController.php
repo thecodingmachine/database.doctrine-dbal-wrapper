@@ -175,7 +175,17 @@ class DBALConnectionInstallController extends Controller  {
 			$eventManager = $moufManager->createInstance('Doctrine\\Common\\EventManager');
 			
 			$connectionInstance = $moufManager->createInstance("Doctrine\\DBAL\\Connection");
-			$connectionInstance->getProperty("params")->setOrigin("php")->setValue('return array("host" => DB_HOST,"user" => DB_USERNAME,"password" => DB_PASSWORD,"port" => DB_PORT,"dbname" => DB_NAME);');
+			$connectionInstance->getProperty("params")->setOrigin("php")->setValue('return array(
+			    "host" => DB_HOST,
+			    "user" => DB_USERNAME,
+			    "password" => DB_PASSWORD,
+			    "port" => DB_PORT,
+			    "dbname" => DB_NAME,
+			    "charset" => "utf8",
+			    "driverOptions" => array(
+			        1002 =>"SET NAMES utf8"
+			    )
+			);');
 			$connectionInstance->getProperty("driver")->setValue($driverInstance);
 			$connectionInstance->getProperty("eventManager")->setValue($eventManager);
 			$connectionInstance->setName("dbalConnection");
