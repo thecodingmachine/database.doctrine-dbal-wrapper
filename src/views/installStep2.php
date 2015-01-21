@@ -29,8 +29,6 @@ jQuery(function(){
 <form action="install" class="form-horizontal">
 
 
-<input type="hidden" id="selfedit" name="selfedit" value="<?php echo plainstring_to_htmlprotected($this->selfedit) ?>" />
-
 <div class="control-group">
 	<label class="control-label" for="driver">Choose a driver</label>
 	<div class="controls">

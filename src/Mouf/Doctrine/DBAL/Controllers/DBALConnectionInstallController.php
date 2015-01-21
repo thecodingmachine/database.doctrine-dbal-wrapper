@@ -11,36 +11,29 @@ use Mouf\Mvc\Splash\Controllers\Controller;
  * The controller managing the install process.
  * It will query the database details.
  *
- * @Component
  */
 class DBALConnectionInstallController extends Controller  {
-	
-	public $selfedit;
 	
 	/**
 	 * The active MoufManager to be edited/viewed
 	 *
 	 * @var MoufManager
 	 */
-	public $moufManager;
+	private $moufManager;
 	
 	/**
 	 * The template used by the main page for mouf.
 	 *
-	 * @Property
-	 * @Compulsory
 	 * @var TemplateInterface
 	 */
-	public $template;
+	private $template;
 	
 	/**
 	 * The content block the template will be writting into.
 	 *
-	 * @Property
-	 * @Compulsory
 	 * @var HtmlBlock
 	 */
-	public $contentBlock;
+	private $contentBlock;
 	
 	/**
 	 * List of supported drivers and their mappings to the driver classes.
@@ -65,20 +58,23 @@ class DBALConnectionInstallController extends Controller  {
 	);
 	
 	/**
+	 * @param TemplateInterface $template
+	 * @param HtmlBlock $contentBlock
+	 */
+	public function __construct(TemplateInterface $template, HtmlBlock $contentBlock) {
+		$this->template = $template;
+		$this->contentBlock = $contentBlock;
+	}
+	
+	/**
 	 * Displays the first install screen.
 	 * 
 	 * @Action
 	 * @Logged
-	 * @param string $selfedit If true, the name of the component must be a component from the Mouf framework itself (internal use only) 
 	 */
-	public function defaultAction($selfedit = "false") {
-		$this->selfedit = $selfedit;
+	public function index() {
 		
-		if ($selfedit == "true") {
-			$this->moufManager = MoufManager::getMoufManager();
-		} else {
-			$this->moufManager = MoufManager::getMoufManagerHiddenInstance();
-		}
+		$this->moufManager = MoufManager::getMoufManagerHiddenInstance();
 				
 		$this->contentBlock->addFile(dirname(__FILE__)."/../../../../views/installStep1.php", $this);
 		$this->template->toHtml();
@@ -89,10 +85,9 @@ class DBALConnectionInstallController extends Controller  {
 	 * 
 	 * @Action
 	 * @Logged
-	 * @param string $selfedit If true, the name of the component must be a component from the Mouf framework itself (internal use only)
 	 */
-	public function skip($selfedit = "false") {
-		InstallUtils::continueInstall($selfedit == "true");
+	public function skip() {
+		InstallUtils::continueInstall();
 	}
 
 	protected $host;
@@ -106,16 +101,9 @@ class DBALConnectionInstallController extends Controller  {
 	 * 
 	 * @Action
 	 * @Logged
-	 * @param string $selfedit If true, the name of the component must be a component from the Mouf framework itself (internal use only) 
 	 */
-	public function configure($selfedit = "false", $instanceName = null) {
-		$this->selfedit = $selfedit;
-		
-		if ($selfedit == "true") {
-			$this->moufManager = MoufManager::getMoufManager();
-		} else {
-			$this->moufManager = MoufManager::getMoufManagerHiddenInstance();
-		}
+	public function configure($instanceName = null) {
+		$this->moufManager = MoufManager::getMoufManagerHiddenInstance();
 		
 		$configManager = $this->moufManager->getConfigManager();
 		$constants = $configManager->getMergedConstants();
@@ -137,14 +125,9 @@ class DBALConnectionInstallController extends Controller  {
 	 * 
 	 * @Action
 	 * @Logged
-	 * @param string $selfedit If true, the name of the component must be a component from the Mouf framework itself (internal use only)
 	 */
-	public function install($host, $port, $dbname, $user, $password, $driver, $selfedit = "false") {
-		if ($selfedit == "true") {
-			$this->moufManager = MoufManager::getMoufManager();
-		} else {
-			$this->moufManager = MoufManager::getMoufManagerHiddenInstance();
-		}
+	public function install($host, $port, $dbname, $user, $password, $driver) {
+		$this->moufManager = MoufManager::getMoufManagerHiddenInstance();
 		
 		$moufManager = $this->moufManager;
 		$configManager = $moufManager->getConfigManager();
@@ -203,7 +186,7 @@ class DBALConnectionInstallController extends Controller  {
 		
 		$moufManager->rewriteMouf();		
 		
-		InstallUtils::continueInstall($selfedit == "true");
+		InstallUtils::continueInstall();
 	}
 	
 	/**
