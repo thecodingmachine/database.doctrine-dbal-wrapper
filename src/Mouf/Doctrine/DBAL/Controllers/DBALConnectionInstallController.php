@@ -4,6 +4,7 @@ namespace Mouf\Doctrine\DBAL\Controllers;
 use Doctrine\DBAL\Connection;
 
 use Mouf\Actions\InstallUtils;
+use Mouf\Console\ConsoleUtils;
 use Mouf\MoufManager;
 use Mouf\Mvc\Splash\Controllers\Controller;
 
@@ -189,10 +190,28 @@ class DBALConnectionInstallController extends Controller  {
 			$connectionInstance->getProperty("driver")->setValue($driverInstance);
 			$connectionInstance->getProperty("eventManager")->setValue($eventManager);
 			$connectionInstance->setName("dbalConnection");
+		} else {
+			$connectionInstance = $moufManager->getInstanceDescriptor('dbalConnection');
 		}
-		
-		
-		
+
+		$consoleUtils = new ConsoleUtils($moufManager);
+
+		// Let's configure the console
+		if (!$moufManager->instanceExists("dbalConnectionHelper")){
+			$dbalConnectionHelper = InstallUtils::getOrCreateInstance('dbalConnectionHelper', 'Doctrine\\DBAL\\Tools\\Console\\Helper\\ConnectionHelper', $moufManager);
+			$dbalConnectionHelper->getConstructorArgumentProperty("connection")->setValue($connectionInstance);
+			$consoleUtils->registerHelper($dbalConnectionHelper, 'db');
+		}
+
+		$dbalRunSqlCommand = InstallUtils::getOrCreateInstance('dbalRunSqlCommand', 'Doctrine\\DBAL\\Tools\\Console\\Command\\RunSqlCommand', $moufManager);
+		$dbalImportCommand = InstallUtils::getOrCreateInstance('dbalImportCommand', 'Doctrine\\DBAL\\Tools\\Console\\Command\\ImportCommand', $moufManager);
+		$dbalReservedWordsCommand = InstallUtils::getOrCreateInstance('dbalReservedWordsCommand', 'Doctrine\\DBAL\\Tools\\Console\\Command\\ReservedWordsCommand', $moufManager);
+
+		$consoleUtils->registerCommand($dbalRunSqlCommand);
+		$consoleUtils->registerCommand($dbalImportCommand);
+		$consoleUtils->registerCommand($dbalReservedWordsCommand);
+
+
 		$configPhpConstants = $configManager->getDefinedConstants();
 		$configPhpConstants['DB_HOST'] = $host;
 		$configPhpConstants['DB_PORT'] = $port;
