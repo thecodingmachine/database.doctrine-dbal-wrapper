@@ -236,6 +236,10 @@ class DBALConnectionInstallController extends Controller  {
 	 * @param string $password
 	 */
 	public function getDbList($host, $port, $user, $password, $driver) {
+		if (empty($driver)) {
+			echo "[]";
+			return;
+		}
 		$driverClass = new $driver();
 		$params = array(
 			"host" => $host,
@@ -243,10 +247,10 @@ class DBALConnectionInstallController extends Controller  {
 			"password" => $password
 		);
 		$conn = new Connection($params, $driverClass);
-		
+
 		try {
 			$dbList = $conn->getSchemaManager()->listDatabases();
-		} catch (Exception $e) {
+		} catch (\Exception $e) {
 			// If bad parameters are passed, let's just return an empty list.
 			echo "[]";
 			return;
