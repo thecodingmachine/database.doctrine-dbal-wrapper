@@ -236,6 +236,9 @@ class DBALConnectionInstallController extends Controller  {
 	 * @param string $password
 	 */
 	public function getDbList($host, $port, $user, $password, $driver) {
+		error_reporting(E_ALL);
+		ini_set('display_errors',1);
+
 		if (empty($driver)) {
 			echo "[]";
 			return;
