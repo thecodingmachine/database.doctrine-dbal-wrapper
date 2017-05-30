@@ -1,4 +1,4 @@
-#Doctrine DBAL wrapper classes for Mouf
+# Doctrine DBAL wrapper classes for Mouf
 
 This package provides a wrapper around the Doctrine's DBALConnection class for the [Mouf](http://mouf-php.com) PHP framework.
 

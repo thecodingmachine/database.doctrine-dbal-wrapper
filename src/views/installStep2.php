@@ -1,6 +1,12 @@
 <?php /* @var $this DbConnectionInstallController */ ?>
 <script type="text/javascript" charset="utf-8">
 function getDbList() {
+    if (jQuery("#driver").val() === 'Doctrine\\DBAL\\Driver\\OCI8\\Driver'
+        || jQuery("#driver").val() === 'Doctrine\\DBAL\\Driver\\PDOOracle\\Driver') {
+        // If Oracle, let's abort finding DBLIst
+        return;
+    }
+
     jQuery.getJSON("getDbList",{driver: jQuery("#driver").val(), host: jQuery("#host").val(), port: jQuery("#port").val(), user: jQuery("#user").val(), password: jQuery("#password").val()}, function(j){
       var currentDb = '<?php echo  plainstring_to_htmlprotected($this->dbname) ?>';
       var options = '<option value=""></option>';
@@ -17,8 +23,21 @@ function getDbList() {
     });
 }
 
+function showHideOracleData() {
+    if (jQuery("#driver").val() === 'Doctrine\\DBAL\\Driver\\OCI8\\Driver'
+        || jQuery("#driver").val() === 'Doctrine\\DBAL\\Driver\\PDOOracle\\Driver') {
+        jQuery(".oracle").show();
+        jQuery(".dbnameselect").hide();
+    } else {
+        jQuery(".oracle").hide();
+        jQuery(".dbnameselect").show();
+    }
+}
+
 jQuery(function(){
-  jQuery(".recomputeDbList").change(getDbList)
+  jQuery(".recomputeDbList").change(getDbList);
+  jQuery("#driver").change(showHideOracleData);
+  showHideOracleData();
 })
 
 
@@ -77,7 +96,15 @@ jQuery(function(){
 	</div>
 </div>
 
-<div class="control-group">
+<div class="control-group oracle">
+    <label for="user" class="control-label">Oracle service name:</label>
+    <div class="controls">
+        <input type="text" id="servicename" name="servicename" class="recomputeDbList" value="<?php echo plainstring_to_htmlprotected($this->serviceName) ?>" />
+        <span class="help-block">The Oracle SID to connect to the database.</span>
+    </div>
+</div>
+
+<div class="control-group dbnameselect">
 	<label for="dbname" class="control-label">Database name:</label>
 	<div class="controls">
 		<select id="dbname" name="dbname">
@@ -87,10 +114,19 @@ jQuery(function(){
 	</div>
 </div>
 
+<div class="control-group oracle">
+    <label for="dbname" class="control-label">Database name:</label>
+    <div class="controls">
+        <input type="text" id="dbname" name="dbname" value="<?php echo plainstring_to_htmlprotected($this->dbname) ?>" />
+        <span class="help-block">The database to connect to.</span>
+    </div>
+</div>
+
 <div class="control-group">
 	<div class="controls">
 		<button name="action" value="install" type="submit" class="btn btn-danger">Next</button>
 	</div>
 </div>
+
 <p>Note: After setup, you can customize additional parameters in the <strong>dbConnection</strong> instance (encoding, etc...).</p>
 </form>

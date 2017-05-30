@@ -101,6 +101,7 @@ class DBALConnectionInstallController extends Controller  {
 	protected $dbname;
 	protected $user;
 	protected $password;
+	protected $serviceName;
 	
 	/**
 	 * Displays the second install screen.
@@ -126,7 +127,8 @@ class DBALConnectionInstallController extends Controller  {
 		$this->dbname = isset($constants['DB_NAME']) ? $constants['DB_NAME']['value'] : "";
 		$this->user = isset($constants['DB_USERNAME']) ? $constants['DB_USERNAME']['value'] : "root";
 		$this->password = isset($constants['DB_PASSWORD']) ? $constants['DB_PASSWORD']['value'] : "";
-		
+        $this->serviceName = isset($constants['DB_SERVICENAME']) ? $constants['DB_SERVICENAME']['value'] : "";
+
 		$this->contentBlock->addFile(dirname(__FILE__)."/../../../../views/installStep2.php", $this);
 		$this->template->toHtml();
 	}
@@ -140,7 +142,7 @@ class DBALConnectionInstallController extends Controller  {
 	 * @Logged
 	 * @param string $selfedit If true, the name of the component must be a component from the Mouf framework itself (internal use only)
 	 */
-	public function install($host, $port, $dbname, $user, $password, $driver, $selfedit = "false") {
+	public function install($host, $port, $dbname, $user, $password, $driver, $servicename, $selfedit = "false") {
 		if ($selfedit == "true") {
 			$this->moufManager = MoufManager::getMoufManager();
 		} else {
@@ -170,13 +172,47 @@ class DBALConnectionInstallController extends Controller  {
 		if (!isset($constants['DB_PASSWORD'])) {
 			$configManager->registerConstant("DB_PASSWORD", "string", "", "The password to access the database.");
 		}
+
+		if ($driver === 'Doctrine\DBAL\Driver\PDOOracle\Driver' ||
+            $driver === 'Doctrine\DBAL\Driver\OCI8\Driver') {
+            if (!isset($constants['DB_SERVICENAME'])) {
+                $configManager->registerConstant("DB_SERVICENAME", "string", "", "The Oracle SID to access the database.");
+            }
+        }
 		
 		if (!$moufManager->instanceExists("dbalConnection")){
-			$driverInstance = $moufManager->createInstance($driver);
-			$eventManager = $moufManager->createInstance('Doctrine\\Common\\EventManager');
-			
-			$connectionInstance = $moufManager->createInstance("Doctrine\\DBAL\\Connection");
-			$connectionInstance->getProperty("params")->setOrigin("php")->setValue('return array(
+            if ($driver === 'Doctrine\DBAL\Driver\PDOOracle\Driver' ||
+                $driver === 'Doctrine\DBAL\Driver\OCI8\Driver') {
+                $driverShortName = ($driver === 'Doctrine\DBAL\Driver\OCI8\Driver')?'oci8':'pdo_oci';
+                $connectionInstance = $moufManager->createInstanceByCode();
+                $connectionInstance->setCode('$evm = new Doctrine\Common\EventManager();
+$evm->addEventSubscriber(new Doctrine\DBAL\Event\Listeners\OracleSessionInit(array(
+    \'NLS_TIME_FORMAT\' => \'HH24:MI:SS\',
+)));
+
+$config = new \Doctrine\DBAL\Configuration();
+
+
+$connectionParams = array(
+    \'servicename\' => DB_SERVICENAME,
+    \'dbname\' => DB_NAME,
+    \'user\' => DB_USER,
+    \'password\' => DB_PASSWORD,
+    \'host\' => DB_HOST,
+    \'port\' => DB_PORT,
+    \'charset\' => \'utf-8\',
+    \'driver\' => \''.$driverShortName.'\',
+);
+$connection = \Doctrine\DBAL\DriverManager::getConnection($connectionParams, $config, $evm);
+$connection->setAutoCommit(true);
+return $connection;');
+                $connectionInstance->setName("dbalConnection");
+            } else {
+                $driverInstance = $moufManager->createInstance($driver);
+                $eventManager = $moufManager->createInstance('Doctrine\\Common\\EventManager');
+
+                $connectionInstance = $moufManager->createInstance("Doctrine\\DBAL\\Connection");
+                $connectionInstance->getProperty("params")->setOrigin("php")->setValue('return array(
 			    "host" => DB_HOST,
 			    "user" => DB_USERNAME,
 			    "password" => DB_PASSWORD,
@@ -187,9 +223,10 @@ class DBALConnectionInstallController extends Controller  {
 			        1002 =>"SET NAMES utf8"
 			    )
 			);');
-			$connectionInstance->getProperty("driver")->setValue($driverInstance);
-			$connectionInstance->getProperty("eventManager")->setValue($eventManager);
-			$connectionInstance->setName("dbalConnection");
+                $connectionInstance->getProperty("driver")->setValue($driverInstance);
+                $connectionInstance->getProperty("eventManager")->setValue($eventManager);
+                $connectionInstance->setName("dbalConnection");
+            }
 		} else {
 			$connectionInstance = $moufManager->getInstanceDescriptor('dbalConnection');
 		}
@@ -218,6 +255,12 @@ class DBALConnectionInstallController extends Controller  {
 		$configPhpConstants['DB_USERNAME'] = $user;
 		$configPhpConstants['DB_PASSWORD'] = $password;
 		$configPhpConstants['DB_NAME'] = $dbname;
+        if ($driver === 'Doctrine\DBAL\Driver\PDOOracle\Driver' ||
+            $driver === 'Doctrine\DBAL\Driver\OCI8\Driver') {
+            if (!isset($constants['DB_SERVICENAME'])) {
+                $configPhpConstants['DB_SERVICENAME'] = $servicename;
+            }
+        }
 		$configManager->setDefinedConstants($configPhpConstants);
 		
 		$moufManager->rewriteMouf();		
