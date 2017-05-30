@@ -56,12 +56,12 @@ jQuery(function(){
 		<select name="driver" id="driver" class="recomputeDbList">
 		<option value=''> - Choose a Driver - </option>
 		<?php 
-		foreach ($this->driverMap as $key => $value) {
-		?>
+        foreach ($this->driverMap as $key => $value) {
+            ?>
 		<option value='<?php echo $value?>'><?php echo $key; ?></option>
 		<?php	
-		}
-		?>
+        }
+        ?>
 	</select>
 	<p class="info">Note: for now, only PDO Mysql and MSQLi have been tested.</p>
 	</div>

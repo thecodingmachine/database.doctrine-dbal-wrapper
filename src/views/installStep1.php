@@ -1,5 +1,6 @@
 <?php 
 use Mouf\Doctrine\DBAL\Controllers\DBALConnectionInstallController;
+
 /* @var $this DBALConnectionInstallController */
 ?>
 
