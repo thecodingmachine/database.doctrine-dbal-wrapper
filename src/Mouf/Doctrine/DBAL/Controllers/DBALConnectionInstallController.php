@@ -145,7 +145,7 @@ class DBALConnectionInstallController extends Controller
      * @Logged
      * @param string $selfedit If true, the name of the component must be a component from the Mouf framework itself (internal use only)
      */
-    public function install($host, $port, $dbname, $user, $password, $driver, $servicename, $selfedit = "false")
+    public function install($host, $port, $dbname, $dbname_oracle, $user, $password, $driver, $servicename, $selfedit = "false")
     {
         if ($selfedit == "true") {
             $this->moufManager = MoufManager::getMoufManager();
@@ -187,6 +187,7 @@ class DBALConnectionInstallController extends Controller
         if (!$moufManager->instanceExists("dbalConnection")) {
             if ($driver === 'Doctrine\DBAL\Driver\PDOOracle\Driver' ||
                 $driver === 'Doctrine\DBAL\Driver\OCI8\Driver') {
+                $dbname = $dbname_oracle;
                 $driverShortName = ($driver === 'Doctrine\DBAL\Driver\OCI8\Driver')?'oci8':'pdo_oci';
                 $connectionInstance = $moufManager->createInstanceByCode();
                 $connectionInstance->setCode('$evm = new Doctrine\Common\EventManager();

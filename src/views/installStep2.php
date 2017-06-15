@@ -115,9 +115,9 @@ jQuery(function(){
 </div>
 
 <div class="control-group oracle">
-    <label for="dbname" class="control-label">Database name:</label>
+    <label for="dbname2" class="control-label">Database name:</label>
     <div class="controls">
-        <input type="text" id="dbname" name="dbname" value="<?php echo plainstring_to_htmlprotected($this->dbname) ?>" />
+        <input type="text" id="dbname2" name="dbname_oracle" value="<?php echo plainstring_to_htmlprotected($this->dbname) ?>" />
         <span class="help-block">The database to connect to.</span>
     </div>
 </div>
