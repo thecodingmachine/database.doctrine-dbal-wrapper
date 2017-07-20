@@ -145,7 +145,7 @@ class DBALConnectionInstallController extends Controller
      * @Logged
      * @param string $selfedit If true, the name of the component must be a component from the Mouf framework itself (internal use only)
      */
-    public function install($host, $port, $dbname, $dbname_oracle, $user, $password, $driver, $servicename, $selfedit = "false")
+    public function install($host, $port, $user, $password, $driver, $servicename, $selfedit = "false", $dbname = null, $dbname_oracle = null)
     {
         if ($selfedit == "true") {
             $this->moufManager = MoufManager::getMoufManager();
@@ -189,45 +189,46 @@ class DBALConnectionInstallController extends Controller
                 $driver === 'Doctrine\DBAL\Driver\OCI8\Driver') {
                 $dbname = $dbname_oracle;
                 $driverShortName = ($driver === 'Doctrine\DBAL\Driver\OCI8\Driver')?'oci8':'pdo_oci';
-                $connectionInstance = $moufManager->createInstanceByCode();
-                $connectionInstance->setCode('$evm = new Doctrine\Common\EventManager();
+
+                $eventManager = $moufManager->createInstanceByCode();
+                $eventManager->setCode('$evm = new Doctrine\Common\EventManager();
 $evm->addEventSubscriber(new Doctrine\DBAL\Event\Listeners\OracleSessionInit(array(
     \'NLS_TIME_FORMAT\' => \'HH24:MI:SS\',
 )));
+return $evm;');
 
-$config = new \Doctrine\DBAL\Configuration();
-
-
-$connectionParams = array(
-    \'servicename\' => DB_SERVICENAME,
-    \'dbname\' => DB_NAME,
-    \'user\' => DB_USERNAME,
-    \'password\' => DB_PASSWORD,
-    \'host\' => DB_HOST,
-    \'port\' => DB_PORT,
-    \'charset\' => \'utf-8\',
-    \'driver\' => \''.$driverShortName.'\',
-);
-$connection = \Doctrine\DBAL\DriverManager::getConnection($connectionParams, $config, $evm);
-$connection->setAutoCommit(true);
-return $connection;');
+                $driverInstance = $moufManager->createInstance($driver);
+                $connectionInstance = $moufManager->createInstance("Doctrine\\DBAL\\Connection");
+                $connectionInstance->getProperty("params")->setOrigin("php")->setValue('return array(
+    "servicename" => DB_SERVICENAME,
+    "host" => DB_HOST,
+    "user" => DB_USERNAME,
+    "password" => DB_PASSWORD,
+    "port" => DB_PORT,
+    "dbname" => DB_NAME,
+    "charset" => "utf8",
+    "driver" => \''.$driverShortName.'\',
+);');
+                $connectionInstance->getProperty("driver")->setValue($driverInstance);
+                $connectionInstance->getProperty("eventManager")->setValue($eventManager);
                 $connectionInstance->setName("dbalConnection");
+                $connectionInstance->getProperty("autoCommit")->setValue(true);
             } else {
                 $driverInstance = $moufManager->createInstance($driver);
                 $eventManager = $moufManager->createInstance('Doctrine\\Common\\EventManager');
 
                 $connectionInstance = $moufManager->createInstance("Doctrine\\DBAL\\Connection");
                 $connectionInstance->getProperty("params")->setOrigin("php")->setValue('return array(
-			    "host" => DB_HOST,
-			    "user" => DB_USERNAME,
-			    "password" => DB_PASSWORD,
-			    "port" => DB_PORT,
-			    "dbname" => DB_NAME,
-			    "charset" => "utf8",
-			    "driverOptions" => array(
-			        1002 =>"SET NAMES utf8"
-			    )
-			);');
+    "host" => DB_HOST,
+    "user" => DB_USERNAME,
+    "password" => DB_PASSWORD,
+    "port" => DB_PORT,
+    "dbname" => DB_NAME,
+    "charset" => "utf8",
+    "driverOptions" => array(
+        1002 =>"SET NAMES utf8"
+    )
+);');
                 $connectionInstance->getProperty("driver")->setValue($driverInstance);
                 $connectionInstance->getProperty("eventManager")->setValue($eventManager);
                 $connectionInstance->setName("dbalConnection");
